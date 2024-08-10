@@ -1,32 +1,36 @@
-const express=require("express")
-const app=express()
-const http=require("http")
-const server=http.createServer(app)
-require("dotenv").config()
-const socketio=require("socket.io")
-const path=require("path")
+// Server-side code (server.js)
 
-const io=socketio(server)
+const express = require("express");
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
+require("dotenv").config();
+const socketio = require("socket.io");
+const path = require("path");
 
-app.use(express.static(path.join(__dirname, "public" )))
-app.set("view engine", "views")
-app.set("views","ejs")
+const io = socketio(server);
 
-io.on("connection",(socket)=>{
-    console.log(socket.id)
-    socket.on("send-location",(data)=>{
-        io.emit("receive-location",{id:socket.id,data})
-    })
-    socket.on("disconnect",()=>{
-        io.emit("user-disconnect",socket.id)
-    })
-})
+app.use(express.static(path.join(__dirname, "public")));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-app.get("/",async (req,res)=>{
-    return res.status(200).render(path.join(__dirname,"views","index.ejs"));
-})
+io.on("connection", (socket) => {
+    console.log(`User connected: ${socket.id}`);
 
+    socket.on("send-location", (data) => {
+        io.emit("receive-location", { id: socket.id, data });
+    });
 
-server.listen(3000,()=>{
-    console.log("listening on port")
-})
+    socket.on("disconnect", () => {
+        io.emit("user-disconnect", socket.id);
+        console.log(`User disconnected: ${socket.id}`);
+    });
+});
+
+app.get("/", async (req, res) => {
+    return res.status(200).render("index");
+});
+
+server.listen(3000, () => {
+    console.log("Server listening on port 3000");
+});
